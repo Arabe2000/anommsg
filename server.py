@@ -110,7 +110,7 @@ def join_room_api():
 @socketio.on('connect')
 def handle_connect():
     """Manipula conexão de um cliente"""
-    session_id = request.sid
+    session_id = request.sid  # type: ignore
     print(f"Cliente conectado: {session_id}")
     
     # Limpa sessões expiradas
@@ -141,7 +141,7 @@ def handle_join_room(data):
             'user_id': user_id,
             'room': room_id,
             'timestamp': datetime.now()
-        }
+        }  # type: ignore
         
         # Entra na sala do SocketIO
         join_room(room_id)
@@ -226,7 +226,6 @@ def handle_leave_room(data):
         if room_id and user_id:
             if room_id in active_rooms and user_id in active_rooms[room_id]['users']:
                 active_rooms[room_id]['users'].remove(user_id)
-                
                 # Se não há mais usuários, remove a sala
                 if len(active_rooms[room_id]['users']) == 0:
                     del active_rooms[room_id]
@@ -236,36 +235,29 @@ def handle_leave_room(data):
                         'user_id': user_id,
                         'users_count': len(active_rooms[room_id]['users'])
                     }, to=room_id, include_self=False)
-        
-        # Remove da sessão ativa
-        if request.sid in active_sessions:
-            del active_sessions[request.sid]
-        
+        # Remove da sessão ativa (garantido)
+        if request.sid in active_sessions:  # type: ignore
+            del active_sessions[request.sid]  # type: ignore
         # Sai da sala do SocketIO
         leave_room(room_id)
-        
         emit('room_left', {'room_id': room_id})
         print(f"Usuário {user_id} saiu da sala {room_id}")
-    
     except Exception as e:
         emit('error', {'message': str(e)})
 
 @socketio.on('disconnect')
 def handle_disconnect():
     """Manipula desconexão de um cliente"""
-    session_id = request.sid
+    session_id = request.sid  # type: ignore
     print(f"Cliente desconectado: {session_id}")
-    
-    # Remove da sessão ativa
-    if request.sid in active_sessions:
-        session_data = active_sessions[request.sid]
+    # Remove da sessão ativa (garantido)
+    if request.sid in active_sessions:  # type: ignore
+        session_data = active_sessions[request.sid]  # type: ignore
         room_id = session_data['room']
         user_id = session_data['user_id']
-        
         # Remove usuário da sala
         if room_id in active_rooms and user_id in active_rooms[room_id]['users']:
             active_rooms[room_id]['users'].remove(user_id)
-            
             # Se não há mais usuários, remove a sala
             if len(active_rooms[room_id]['users']) == 0:
                 del active_rooms[room_id]
@@ -275,8 +267,7 @@ def handle_disconnect():
                     'user_id': user_id,
                     'users_count': len(active_rooms[room_id]['users'])
                 }, to=room_id, include_self=False)
-        
-        del active_sessions[request.sid]
+        del active_sessions[request.sid]  # type: ignore
 
 # Zeroização e limpeza ao fechar o servidor
 import atexit
