@@ -146,23 +146,27 @@ def handle_join_room(data):
         # Entra na sala do SocketIO
         join_room(room_id)
         
-        # Adiciona usuário à sala
-        active_rooms[room_id]['users'].add(user_id)
-        
-        emit('room_joined', {
-            'room_id': room_id,
-            'user_id': user_id,
-            'users_count': len(active_rooms[room_id]['users'])
-        })
-        
-        # Notifica outros usuários
-        emit('user_joined', {
-            'user_id': user_id,
-            'users_count': len(active_rooms[room_id]['users'])
-        }, to=room_id, include_self=False)
-        
-        print(f"Usuário {user_id} entrou na sala {room_id}")
-    
+        # Só adiciona usuário se ainda não estiver
+        if user_id not in active_rooms[room_id]['users']:
+            active_rooms[room_id]['users'].add(user_id)
+            emit('room_joined', {
+                'room_id': room_id,
+                'user_id': user_id,
+                'users_count': len(active_rooms[room_id]['users'])
+            })
+            # Notifica outros usuários
+            emit('user_joined', {
+                'user_id': user_id,
+                'users_count': len(active_rooms[room_id]['users'])
+            }, to=room_id, include_self=False)
+            print(f"Usuário {user_id} entrou na sala {room_id}")
+        else:
+            # Se já está na sala, só confirma
+            emit('room_joined', {
+                'room_id': room_id,
+                'user_id': user_id,
+                'users_count': len(active_rooms[room_id]['users'])
+            })
     except Exception as e:
         emit('error', {'message': str(e)})
 
